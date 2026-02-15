@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curio Cards Supply Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-orange: #F57040;
+            --cream: #FFE9E1;
+            --dark-text: #2D2D2D;
+            --light-text: #666;
+            --card-shadow: 0 4px 20px rgba(245, 112, 64, 0.15);
+            --hover-shadow: 0 8px 30px rgba(245, 112, 64, 0.25);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Mono', monospace;
+            background: white;
+            color: var(--dark-text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-orange) 0%, #E85030 100%);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 500px;
+            height: 500px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(-50px, 50px) rotate(180deg); }
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            position: relative;
+            z-index: 1;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.95;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            position: relative;
+            z-index: 1;
+        }
+
+        .last-updated {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            opacity: 0.9;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+
+        .refresh-button {
+            margin-top: 1rem;
+            padding: 0.75rem 2rem;
+            background: white;
+            color: var(--primary-orange);
+            border: none;
+            border-radius: 25px;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .refresh-button:hover {
+            background: var(--cream);
+            transform: scale(1.05);
+        }
+
+        .refresh-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0 3rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            border: 2px solid var(--cream);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-orange), #E85030);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--light-text);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-orange);
+            font-family: 'Playfair Display', serif;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .card-item {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 3px solid transparent;
+            animation: fadeInUp 0.6s ease forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card-item {
+            transform: translateY(20px);
+        }
+
+        .card-item:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: var(--hover-shadow);
+            border-color: var(--primary-orange);
+        }
+
+        .card-image-container {
+            width: 100%;
+            aspect-ratio: 350 / 490;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: fill;
+            position: relative;
+            z-index: 1;
+            transition: transform 0.4s ease;
+        }
+
+        .card-number {
+            display: none;
+        }
+
+        .card-item:hover .card-image {
+            transform: scale(1.05);
+        }
+
+        .card-number {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: var(--primary-orange);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 10px rgba(245, 112, 64, 0.4);
+            z-index: 2;
+        }
+
+        .card-content {
+            padding: 1.5rem;
+        }
+
+        .card-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--dark-text);
+            margin-bottom: 1rem;
+        }
+
+        .supply-bars {
+            margin: 1.5rem 0;
+        }
+
+        .supply-bar {
+            margin-bottom: 1rem;
+        }
+
+        .supply-bar-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .supply-bar-bg {
+            background: var(--cream);
+            height: 12px;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .supply-bar-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .supply-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .supply-bar-fill.active {
+            background: linear-gradient(90deg, #4CAF50, #66BB6A);
+        }
+
+        .supply-bar-fill.inactive {
+            background: linear-gradient(90deg, #FFA726, #FFB74D);
+        }
+
+        .supply-bar-fill.burned {
+            background: linear-gradient(90deg, #EF5350, #E57373);
+        }
+        
+        .supply-bar-fill.wrapped {
+            background: linear-gradient(90deg, #3b84f7, #5c9aff);
+        }
+
+        .supply-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 2px solid var(--cream);
+        }
+
+        .supply-stat {
+            text-align: center;
+        }
+
+        .supply-stat-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary-orange);
+        }
+
+        .supply-stat-label {
+            font-size: 0.7rem;
+            color: var(--light-text);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 0.25rem;
+        }
+
+        .faq-section {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 4rem 0;
+            box-shadow: var(--card-shadow);
+            border: 2px solid var(--cream);
+        }
+
+        .faq-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--primary-orange);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .faq-item {
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid var(--cream);
+        }
+
+        .faq-item:last-child {
+            border-bottom: none;
+        }
+
+        .faq-question {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--dark-text);
+            margin-bottom: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: color 0.3s ease;
+        }
+
+        .faq-question:hover {
+            color: var(--primary-orange);
+        }
+
+        .faq-question::before {
+            content: '→';
+            margin-right: 1rem;
+            color: var(--primary-orange);
+            font-size: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .faq-question.active::before {
+            transform: rotate(90deg);
+        }
+
+        .faq-answer {
+            color: var(--light-text);
+            line-height: 1.8;
+            padding-left: 2.5rem;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, opacity 0.4s ease;
+            opacity: 0;
+        }
+
+        .faq-answer.active {
+            max-height: 1000px;
+            opacity: 1;
+            margin-top: 1rem;
+        }
+
+        .faq-answer a {
+            color: var(--primary-orange);
+            text-decoration: none;
+            font-weight: 700;
+            transition: opacity 0.3s ease;
+        }
+
+        .faq-answer a:hover {
+            opacity: 0.7;
+            text-decoration: underline;
+        }
+
+        .faq-answer ul {
+            margin: 1rem 0 1rem 2rem;
+        }
+
+        .faq-answer li {
+            margin: 0.5rem 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 4rem;
+            font-size: 1.2rem;
+            color: var(--light-text);
+        }
+
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        .error {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: center;
+            color: #856404;
+        }
+
+        .search-bar {
+            margin: 2rem 0;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1.2rem 3rem 1.2rem 1.5rem;
+            border: 3px solid var(--cream);
+            border-radius: 50px;
+            font-family: 'Space Mono', monospace;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-orange);
+            box-shadow: 0 0 0 4px rgba(245, 112, 64, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--light-text);
+            font-size: 1.2rem;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--light-text);
+            font-size: 0.9rem;
+        }
+
+        .footer a {
+            color: var(--primary-orange);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 2.5rem;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-overview {
+                grid-template-columns: 1fr;
+            }
+
+            .faq-section {
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">CURIO CARDS</div>
+        <div class="subtitle">Supply Dashboard</div>
+        <div class="last-updated">Last Updated: <span id="lastUpdated">Loading...</span></div>
+        <button class="refresh-button" id="refreshButton" onclick="refreshData()">🔄 Refresh Data</button>
+    </div>
+
+    <div class="container">
+        <div class="stats-overview" id="statsOverview">
+            <div class="loading">Loading supply data</div>
+        </div>
+
+        <div class="search-bar">
+            <input type="text" class="search-input" id="searchInput" placeholder="Search by card name or number...">
+            <span class="search-icon">🔍</span>
+        </div>
+
+        <div class="cards-grid" id="cardsGrid">
+            <!-- Cards will be loaded here -->
+        </div>
+
+        <div class="faq-section">
+            <h2 class="faq-title">Frequently Asked Questions</h2>
+            
+            <div class="faq-item">
+                <div class="faq-question">What is this dashboard?</div>
+                <div class="faq-answer">
+                    This is an online dashboard created to track the supply of Curio Cards. As an historical NFT collection, Curio Cards predate the <a href="https://eips.ethereum.org/EIPS/eip-721" target="_blank">ERC721 standard</a>, making it difficult to track the ownership of these tokens. Furthermore, many Ethereum wallets from that era have been lost. Together, this means that it's difficult to know how many Curio Cards are in active circulation. This dashboard uses <a href="https://thegraph.com" target="_blank">The Graph</a>, the <a href="https://etherscan.io/apis" target="_blank">Etherscan API</a>, and modern web technologies to show how many Curio Cards have been burned, how many are in inactive (possibly lost) wallets, and how many remain in active circulation.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">What are burned cards?</div>
+                <div class="faq-answer">
+                    Burned cards are Curio Cards that have been sent to an address whose assets are known to be unrecoverable. The dashboard tracks three burn addresses:
+                    <ul>
+                        <li><a href="https://etherscan.io/address/0x0000000000000000000000000000000000000000" target="_blank">0x0000000000000000000000000000000000000000</a></li>
+                        <li><a href="https://etherscan.io/address/0x000000000000000000000000000000000000dead" target="_blank">0x000000000000000000000000000000000000dEaD</a></li>
+                        <li><a href="https://opensea.io/collection/lockedcards" target="_blank">0x77F84c36e451496d7f489Efd16e9753fC2C8f0DF</a> (Locked Cards contract)</li>
+                    </ul>
+                    The "0x00...0000" address is a common burn address for ETH and ERC-20 tokens. Since many NFT contracts disallow sending tokens to this address, the "0x00...dEaD" address is a common burn address for NFTs. The third address is the Locked Cards contract, an early Curio Card wrapper contract with a flaw that prevents unwrapping.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">What are inactive cards?</div>
+                <div class="faq-answer">
+                    Inactive cards are Curio Cards that are held in a wallet that has not had an outgoing transaction since January 1, 2020. There are various reasons why a wallet might be inactive, including:
+                    <ul>
+                        <li>Keys to the wallet have been lost, temporarily or permanently (not uncommon for 2017-era wallets)</li>
+                        <li>The wallet is used as a vault, and the owner(s) have never needed to withdraw ETH or tokens</li>
+                        <li>Cards were accidentally sent to the wrong address, and have been permanently lost</li>
+                    </ul>
+                    This means that it is possible for inactive wallets to become active again! However, it is likely that many inactive cards have been permanently lost.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">What are Total Supply, Remaining Supply, and Active Supply?</div>
+                <div class="faq-answer">
+                    <strong>Total Supply</strong> is the total number of cards sold from the original vending machine contracts. <strong>Remaining Supply</strong> is the total number of unburned cards (Total Supply minus Burned Cards). <strong>Active Supply</strong> is the total number of cards held in active wallets (wallets that have had outbound transactions since January 1, 2020).
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">What are Wrapped cards?</div>
+                <div class="faq-answer">
+                    Wrapped Curio Cards are cards that have gone through the process of upgrading original 2017 Curio Cards—the earliest known art NFTs on Ethereum—from their legacy ERC-20 format into modern ERC-1155 tokens. This enables them to be traded on mainstream marketplaces like <a href="https://opensea.io/collection/curiocardswrapper" target="_blank">OpenSea</a>. The "Wrapped" number shown on each card represents how many of that card have been wrapped and are currently held in the main Curio Cards wrapper contract.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">How often is this data updated?</div>
+                <div class="faq-answer">
+                    This dashboard automatically fetches data weekly from <a href="https://ccsupply.xyz" target="_blank">ccsupply.xyz</a> and <a href="https://etherscan.io" target="_blank">Etherscan</a>, which provide the most accurate and up-to-date supply information. The data is updated weekly due to API costs and the fact that supply data doesn't change dramatically over short periods. The last update date is shown at the top of this dashboard. You can also manually refresh the data using the "Refresh Data" button.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">What are Curio Cards?</div>
+                <div class="faq-answer">
+                    <a href="https://curio.cards/" target="_blank">Curio Cards</a> are the first art NFTs on the Ethereum blockchain, created in 2017. They represent a pioneering moment in blockchain art history and predate the modern ERC721 NFT standard. Wrapped Curio Cards are available on <a href="https://opensea.io/collection/curiocardswrapper" target="_blank">OpenSea</a> and other NFT marketplaces.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Data sourced from <a href="https://ccsupply.xyz" target="_blank">ccsupply.xyz</a> | 
+        Curio Cards official site: <a href="https://curio.cards" target="_blank">curio.cards</a> | 
+        Join the community on <a href="https://discord.curio.cards" target="_blank">Discord</a>
+    </div>
+
+    <script>
+        // API Configuration - use relative URL so it works everywhere
+        const API_BASE_URL = '/api';
+
+        // Function to get card image URL - OpenSea CDN (these URLs work!)
+        function getCardImageUrl(cardNum) {
+            const imageMap = {
+                1: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/5a85aa56a5748e4435558bbd5a8516/0d5a85aa56a5748e4435558bbd5a8516.jpeg?w=500',
+                2: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/58ea31c5c29ac4d4b310897a5be0a8/6758ea31c5c29ac4d4b310897a5be0a8.jpeg?w=500',
+                3: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/7dce18b41f497e5ab4eadfd4fcc277/617dce18b41f497e5ab4eadfd4fcc277.jpeg?w=500',
+                4: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/2b548b446dbb85635d74d67c461fbf/5b2b548b446dbb85635d74d67c461fbf.jpeg?w=500',
+                5: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/88bc23e640b62f437712625d374991/4688bc23e640b62f437712625d374991.jpeg?w=500',
+                6: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/1808e997f3f29881329df31f4d39fc/031808e997f3f29881329df31f4d39fc.jpeg?w=500',
+                7: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/69598dea6a6a759457a77fe1eacfcd/fd69598dea6a6a759457a77fe1eacfcd.jpeg?w=500',
+                8: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/9d1c5833c85dd3a4c5ba9d8b9508bc/799d1c5833c85dd3a4c5ba9d8b9508bc.jpeg?w=500',
+                9: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/314bd033f95fdf35d7ce032cbe7b42/90314bd033f95fdf35d7ce032cbe7b42.jpeg?w=500',
+                10: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/860bd7d29269b49cbc878fcc0b6e38/64860bd7d29269b49cbc878fcc0b6e38.jpeg?w=500',
+                11: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/499893ec620d20039af627bb373bef/df499893ec620d20039af627bb373bef.jpeg?w=500',
+                12: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/c3d6e13bc3269d4d869ebbbba0dfa7/ebc3d6e13bc3269d4d869ebbbba0dfa7.jpeg?w=500',
+                13: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/093de645df1dc12df52e67626fa7a9/40093de645df1dc12df52e67626fa7a9.jpeg?w=500',
+                14: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/c07ee979bfcb0cbafdc299065b742e/4ec07ee979bfcb0cbafdc299065b742e.jpeg?w=500',
+                15: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/8f93a4a388b510c57fcec6b3f2092d/f88f93a4a388b510c57fcec6b3f2092d.jpeg?w=500',
+                16: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/81bc222bfd36b18eae25279b22837a/c681bc222bfd36b18eae25279b22837a.jpeg?w=500',
+                17: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/3f2e0e9a66b281f7a56f0f9735ec20/533f2e0e9a66b281f7a56f0f9735ec20.jpeg?w=500',
+                '17b': 'https://i2c.seadn.io/ethereum/0x04afa589e2b933f9463c5639f412b183ec062505/ccb6dcfc8bdeda8742752828e3d491/dcccb6dcfc8bdeda8742752828e3d491.png?w=500',
+                18: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/7053db839faec9cbcc791fc4c871ff/9d7053db839faec9cbcc791fc4c871ff.jpeg?w=500',
+                19: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/94a7491b6c096cb1912e33210c29aa/6f94a7491b6c096cb1912e33210c29aa.jpeg?w=500',
+                20: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/cefc91b02a61266d1c267e7070765a/39cefc91b02a61266d1c267e7070765a.jpeg?w=500',
+                21: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/3f1799ff5384cc3a2358a29ecd1f2fe6.png?w=500',
+                22: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/e07e4c694f350c02be0c786125213f/47e07e4c694f350c02be0c786125213f.png?w=500',
+                23: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/e4f08144b995a5d7df281366cfcc44/ebe4f08144b995a5d7df281366cfcc44.gif?w=500',
+                24: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/66a2da263f3d60327f6d72dde1ed55/ba66a2da263f3d60327f6d72dde1ed55.jpeg?w=500',
+                25: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/2f809c00649ca67c727034022a741c/542f809c00649ca67c727034022a741c.jpeg?w=500',
+                26: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/1a929755d91e927ec381af41cd42d6/3d1a929755d91e927ec381af41cd42d6.jpeg?w=500',
+                27: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/432f6d59fabb62051e19076b5f40fd/17432f6d59fabb62051e19076b5f40fd.jpeg?w=500',
+                28: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/71d5a3a81a1dbe1410350288397266/e171d5a3a81a1dbe1410350288397266.jpeg?w=500',
+                29: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/986b8120ac725a350227f7be01b826/3d986b8120ac725a350227f7be01b826.jpeg?w=500',
+                30: 'https://i2c.seadn.io/ethereum/0x73da73ef3a6982109c4d5bdb0db9dd3e3783f313/8debb08ab32fa5dd4e793cda22b20b/f78debb08ab32fa5dd4e793cda22b20b.gif?w=500'
+            };
+            
+            return imageMap[cardNum] || imageMap[cardNum.toString()] || '';
+        }
+
+        // Function to format numbers with commas
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        // Function to calculate percentage
+        function calculatePercentage(part, whole) {
+            return whole > 0 ? ((part / whole) * 100).toFixed(1) : 0;
+        }
+
+        // Function to render statistics overview
+        function renderStatsOverview(data) {
+            const totalCards = data.reduce((sum, card) => sum + card.totalSupply, 0);
+            const totalBurned = data.reduce((sum, card) => sum + card.burned, 0);
+            const totalActive = data.reduce((sum, card) => sum + card.active, 0);
+            const totalInactive = data.reduce((sum, card) => sum + card.inactive, 0);
+
+            const statsHtml = `
+                <div class="stat-card" style="animation-delay: 0s;">
+                    <div class="stat-label">Total Supply</div>
+                    <div class="stat-value">${formatNumber(totalCards)}</div>
+                </div>
+                <div class="stat-card" style="animation-delay: 0.1s;">
+                    <div class="stat-label">Active Supply</div>
+                    <div class="stat-value">${formatNumber(totalActive)}</div>
+                </div>
+                <div class="stat-card" style="animation-delay: 0.2s;">
+                    <div class="stat-label">Inactive Supply</div>
+                    <div class="stat-value">${formatNumber(totalInactive)}</div>
+                </div>
+                <div class="stat-card" style="animation-delay: 0.3s;">
+                    <div class="stat-label">Burned Cards</div>
+                    <div class="stat-value">${formatNumber(totalBurned)}</div>
+                </div>
+            `;
+
+            document.getElementById('statsOverview').innerHTML = statsHtml;
+        }
+
+        // Function to render a single card
+        function renderCard(card, index) {
+            const activePercent = calculatePercentage(card.active, card.remaining);
+            const inactivePercent = calculatePercentage(card.inactive, card.remaining);
+            const burnedPercent = calculatePercentage(card.burned, card.totalSupply);
+            const wrappedPercent = card.remaining > 0 ? calculatePercentage(card.wrapped || 0, card.remaining) : 0;
+
+            return `
+                <div class="card-item" style="animation-delay: ${index * 0.05}s;" data-card-name="${card.name.toLowerCase()}" data-card-num="${card.cardNum}">
+                    <div class="card-image-container">
+                        <div class="card-number">Card #${card.cardNum}</div>
+                        <img class="card-image" src="${getCardImageUrl(card.cardNum)}" alt="${card.name}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 200 200%22%3E%3Crect fill=%22%23FFE9E1%22 width=%22200%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2220%22 fill=%22%23F57040%22%3ECard %23${card.cardNum}%3C/text%3E%3C/svg%3E'">
+                    </div>
+                    <div class="card-content">
+                        <h3 class="card-name">${card.name}</h3>
+                        
+                        <div class="supply-bars">
+                            <div class="supply-bar">
+                                <div class="supply-bar-label">
+                                    <span style="color: #4CAF50;">Active</span>
+                                    <span>${formatNumber(card.active)} (${activePercent}%)</span>
+                                </div>
+                                <div class="supply-bar-bg">
+                                    <div class="supply-bar-fill active" style="width: ${activePercent}%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="supply-bar">
+                                <div class="supply-bar-label">
+                                    <span style="color: #FFA726;">Inactive</span>
+                                    <span>${formatNumber(card.inactive)} (${inactivePercent}%)</span>
+                                </div>
+                                <div class="supply-bar-bg">
+                                    <div class="supply-bar-fill inactive" style="width: ${inactivePercent}%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="supply-bar">
+                                <div class="supply-bar-label">
+                                    <span style="color: #EF5350;">Burned</span>
+                                    <span>${formatNumber(card.burned)} (${burnedPercent}%)</span>
+                                </div>
+                                <div class="supply-bar-bg">
+                                    <div class="supply-bar-fill burned" style="width: ${burnedPercent}%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="supply-bar">
+                                <div class="supply-bar-label">
+                                    <span style="color: #3b84f7;">Wrapped</span>
+                                    <span>${formatNumber(card.wrapped || 0)} (${wrappedPercent}%)</span>
+                                </div>
+                                <div class="supply-bar-bg">
+                                    <div class="supply-bar-fill wrapped" style="width: ${wrappedPercent}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="supply-stats">
+                            <div class="supply-stat">
+                                <div class="supply-stat-value">${formatNumber(card.totalSupply)}</div>
+                                <div class="supply-stat-label">Total</div>
+                            </div>
+                            <div class="supply-stat">
+                                <div class="supply-stat-value">${formatNumber(card.remaining)}</div>
+                                <div class="supply-stat-label">Remaining</div>
+                            </div>
+                            <div class="supply-stat">
+                                <div class="supply-stat-value">${formatNumber(card.active)}</div>
+                                <div class="supply-stat-label">Active</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Function to render all cards
+        function renderCards(data) {
+            const cardsHtml = data.map((card, index) => renderCard(card, index)).join('');
+            document.getElementById('cardsGrid').innerHTML = cardsHtml;
+        }
+
+        // Function to fetch supply data from backend
+        async function fetchSupplyData() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/data`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching supply data:', error);
+                throw error;
+            }
+        }
+
+        // Function to refresh data manually
+        async function refreshData() {
+            const button = document.getElementById('refreshButton');
+            button.disabled = true;
+            button.textContent = '🔄 Refreshing...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/refresh`, {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Refresh failed');
+                }
+
+                // Reload the dashboard with new data
+                await initDashboard();
+                
+                alert('Data refreshed successfully!');
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+                alert('Failed to refresh data. Please try again later.');
+            } finally {
+                button.disabled = false;
+                button.textContent = '🔄 Refresh Data';
+            }
+        }
+
+        // Function to initialize the dashboard
+        async function initDashboard() {
+            try {
+                const response = await fetchSupplyData();
+                
+                // Sort cards: 1-17, 17b, 18-30
+                const data = response.cards.sort((a, b) => {
+                    const aNum = a.cardNum === '17b' ? 17.5 : a.cardNum;
+                    const bNum = b.cardNum === '17b' ? 17.5 : b.cardNum;
+                    return aNum - bNum;
+                });
+                
+                // Set last updated date
+                const lastUpdated = new Date(response.lastUpdated || response.fetchedAt);
+                document.getElementById('lastUpdated').textContent = lastUpdated.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                
+                // Render stats and cards
+                renderStatsOverview(data);
+                renderCards(data);
+                
+                // Initialize FAQ toggles
+                initFAQ();
+                
+                // Initialize search
+                initSearch(data);
+                
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                document.getElementById('statsOverview').innerHTML = `
+                    <div class="error">
+                        Error loading supply data. 
+                        ${error.message.includes('fetch') ? 'Make sure the backend server is running.' : 'Please try again later.'}
+                    </div>
+                `;
+            }
+        }
+
+        // Function to initialize FAQ toggles
+        function initFAQ() {
+            const faqQuestions = document.querySelectorAll('.faq-question');
+            
+            faqQuestions.forEach(question => {
+                question.addEventListener('click', () => {
+                    const answer = question.nextElementSibling;
+                    const isActive = answer.classList.contains('active');
+                    
+                    // Close all other answers
+                    document.querySelectorAll('.faq-answer').forEach(a => {
+                        a.classList.remove('active');
+                    });
+                    document.querySelectorAll('.faq-question').forEach(q => {
+                        q.classList.remove('active');
+                    });
+                    
+                    // Toggle current answer
+                    if (!isActive) {
+                        answer.classList.add('active');
+                        question.classList.add('active');
+                    }
+                });
+            });
+        }
+
+        // Function to initialize search
+        function initSearch(data) {
+            const searchInput = document.getElementById('searchInput');
+            
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase().trim();
+                const cards = document.querySelectorAll('.card-item');
+                
+                cards.forEach(card => {
+                    const cardName = card.getAttribute('data-card-name');
+                    const cardNum = card.getAttribute('data-card-num');
+                    
+                    if (cardName.includes(searchTerm) || cardNum.includes(searchTerm)) {
+                        card.style.display = '';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // Initialize dashboard when page loads
+        document.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+</html>
